@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Waves } from "lucide-react";
+import underwaterBg from "@/assets/underwater-bg.jpg";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -98,8 +99,15 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-card">
-      <Card className="w-full max-w-md border-border/50 shadow-2xl">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Underwater background with fade effect */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${underwaterBg})` }}
+      />
+      <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
+      
+      <Card className="w-full max-w-md border-border/50 shadow-2xl relative z-10 bg-card/80 backdrop-blur-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
             <div className="p-3 bg-primary/10 rounded-full">
