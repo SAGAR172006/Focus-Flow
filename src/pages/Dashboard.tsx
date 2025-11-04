@@ -1,12 +1,194 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Timer, CheckSquare, Activity, TrendingUp } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Timer, CheckSquare, Activity, Clock, Target } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+
+interface TimeLog {
+  id: string;
+  duration: number;
+  session_type: string;
+  created_at: string;
+}
+
+interface Task {
+  id: string;
+  status: string;
+  completed_at: string | null;
+  created_at: string;
+}
+
+interface CalorieRecord {
+  id: string;
+  type: string;
+  calories: number;
+  recorded_at: string;
+}
 
 const Dashboard = () => {
+  const [timeLogs, setTimeLogs] = useState<TimeLog[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [calorieRecords, setCalorieRecords] = useState<CalorieRecord[]>([]);
+  const [viewMode, setViewMode] = useState<"daily" | "weekly">("weekly");
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
+
+  const fetchAnalytics = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Fetch time logs
+    const { data: logs } = await supabase
+      .from("time_logs")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    // Fetch tasks
+    const { data: taskData } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    // Fetch calorie records
+    const { data: calories } = await supabase
+      .from("calorie_records")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("recorded_at", { ascending: false });
+
+    setTimeLogs(logs || []);
+    setTasks(taskData || []);
+    setCalorieRecords(calories || []);
+  };
+
+  // Calculate stats
+  const getWeekStart = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const diff = now.getDate() - dayOfWeek;
+    return new Date(now.setDate(diff));
+  };
+
+  const weekStart = getWeekStart();
+
+  const weekLogs = timeLogs.filter(
+    (log) => new Date(log.created_at) >= weekStart
+  );
+  const totalWeekTime = weekLogs.reduce((sum, log) => sum + log.duration, 0);
+  const weekHours = Math.floor(totalWeekTime / 3600);
+  const weekMinutes = Math.floor((totalWeekTime % 3600) / 60);
+
+  const pomodoroSessions = weekLogs.filter(
+    (log) => log.session_type === "pomodoro"
+  ).length;
+
+  const completedTasks = tasks.filter(
+    (task) =>
+      task.status === "completed" &&
+      task.completed_at &&
+      new Date(task.completed_at) >= weekStart
+  ).length;
+
+  const totalTasks = tasks.filter(
+    (task) => new Date(task.created_at) >= weekStart
+  ).length;
+  const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  const todayCalories = calorieRecords.filter(
+    (record) => new Date(record.recorded_at).toDateString() === new Date().toDateString()
+  );
+  const caloriesGained = todayCalories
+    .filter((r) => r.type === "gained")
+    .reduce((sum, r) => sum + r.calories, 0);
+  const caloriesSpent = todayCalories
+    .filter((r) => r.type === "spent")
+    .reduce((sum, r) => sum + r.calories, 0);
+  const netCalories = caloriesGained - caloriesSpent;
+
+  // Prepare chart data
+  const getLast7Days = () => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      days.push(date);
+    }
+    return days;
+  };
+
+  const last7Days = getLast7Days();
+
+  const productivityData = last7Days.map((date) => {
+    const dateStr = date.toDateString();
+    const dayLogs = timeLogs.filter(
+      (log) => new Date(log.created_at).toDateString() === dateStr
+    );
+    const totalMinutes = dayLogs.reduce((sum, log) => sum + log.duration / 60, 0);
+    const dayTasks = tasks.filter(
+      (task) =>
+        task.status === "completed" &&
+        task.completed_at &&
+        new Date(task.completed_at).toDateString() === dateStr
+    ).length;
+
+    return {
+      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      focusTime: Math.round(totalMinutes),
+      tasks: dayTasks,
+    };
+  });
+
+  const calorieData = last7Days.map((date) => {
+    const dateStr = date.toDateString();
+    const dayRecords = calorieRecords.filter(
+      (record) => new Date(record.recorded_at).toDateString() === dateStr
+    );
+    const gained = dayRecords
+      .filter((r) => r.type === "gained")
+      .reduce((sum, r) => sum + r.calories, 0);
+    const spent = dayRecords
+      .filter((r) => r.type === "spent")
+      .reduce((sum, r) => sum + r.calories, 0);
+
+    return {
+      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      gained,
+      spent,
+      net: gained - spent,
+    };
+  });
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold mb-2">Welcome Back</h1>
-        <p className="text-muted-foreground">Here's your productivity overview</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Analytics Dashboard</h1>
+          <p className="text-muted-foreground">
+            Track your productivity and wellness metrics
+          </p>
+        </div>
+        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "daily" | "weekly")}>
+          <TabsList>
+            <TabsTrigger value="daily">Daily</TabsTrigger>
+            <TabsTrigger value="weekly">Weekly</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* Stats Grid */}
@@ -14,15 +196,15 @@ const Dashboard = () => {
         <Card className="border-border/50 bg-card/50 backdrop-blur">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Focus Time Today
+              Total Focus Time
             </CardTitle>
             <Timer className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">2h 45m</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              +15% from yesterday
-            </p>
+            <div className="text-3xl font-bold">
+              {weekHours}h {weekMinutes}m
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">This week</p>
           </CardContent>
         </Card>
 
@@ -31,13 +213,26 @@ const Dashboard = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Tasks Completed
             </CardTitle>
-            <CheckSquare className="h-4 w-4 text-accent" />
+            <CheckSquare className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">12</div>
+            <div className="text-3xl font-bold">{completedTasks}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              3 more to go today
+              {completionRate}% completion rate
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 bg-card/50 backdrop-blur">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Pomodoro Sessions
+            </CardTitle>
+            <Target className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{pomodoroSessions}</div>
+            <p className="text-xs text-muted-foreground mt-1">This week</p>
           </CardContent>
         </Card>
 
@@ -46,51 +241,102 @@ const Dashboard = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Calorie Balance
             </CardTitle>
-            <Activity className="h-4 w-4 text-secondary" />
+            <Activity className="h-4 w-4 text-accent" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">-250</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Calories burned today
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50 bg-card/50 backdrop-blur">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Weekly Streak
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">7 days</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Keep it going!
-            </p>
+            <div
+              className={`text-3xl font-bold ${
+                netCalories > 0 ? "text-accent" : "text-primary"
+              }`}
+            >
+              {netCalories > 0 ? "+" : ""}
+              {netCalories}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Today</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Activity */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur">
-        <CardHeader>
-          <CardTitle>Today's Focus</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="h-2 flex-1 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full" style={{ width: "65%" }} />
-              </div>
-              <span className="text-sm text-muted-foreground">65% of goal</span>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              You've completed 2h 45m of your 4h daily focus goal. Keep going!
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-border/50 bg-card/50 backdrop-blur">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Productivity Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={productivityData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis
+                  dataKey="date"
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="focusTime"
+                  name="Focus Time (min)"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={{ fill: "hsl(var(--primary))" }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="tasks"
+                  name="Tasks Completed"
+                  stroke="hsl(var(--accent))"
+                  strokeWidth={2}
+                  dot={{ fill: "hsl(var(--accent))" }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 bg-card/50 backdrop-blur">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-accent" />
+              Calorie Trends
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={calorieData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis
+                  dataKey="date"
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="gained" name="Gained" fill="hsl(var(--accent))" />
+                <Bar dataKey="spent" name="Spent" fill="hsl(var(--primary))" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
