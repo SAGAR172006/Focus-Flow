@@ -9,6 +9,7 @@ import {
   Timer,
   CheckSquare,
   Activity,
+  FileText,
   LogOut,
   Waves,
   Moon,
@@ -56,6 +57,7 @@ const Layout = ({ children }: LayoutProps) => {
     { id: "timers", label: "Focus Tools", icon: Timer, path: "/timers" },
     { id: "tasks", label: "Tasks", icon: CheckSquare, path: "/tasks" },
     { id: "calories", label: "Wellness", icon: Activity, path: "/calories" },
+    { id: "documents", label: "AI Documents", icon: FileText, path: "/documents" },
   ];
 
   return (

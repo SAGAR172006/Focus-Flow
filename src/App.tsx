@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Timers from "./pages/Timers";
 import Tasks from "./pages/Tasks";
 import Calories from "./pages/Calories";
+import Documents from "./pages/Documents";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/timers" element={<Layout><Timers /></Layout>} />
           <Route path="/tasks" element={<Layout><Tasks /></Layout>} />
           <Route path="/calories" element={<Layout><Calories /></Layout>} />
+          <Route path="/documents" element={<Layout><Documents /></Layout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
