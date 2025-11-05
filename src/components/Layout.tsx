@@ -10,6 +10,7 @@ import {
   CheckSquare,
   Activity,
   FileText,
+  Youtube,
   LogOut,
   Waves,
   Moon,
@@ -58,6 +59,7 @@ const Layout = ({ children }: LayoutProps) => {
     { id: "tasks", label: "Tasks", icon: CheckSquare, path: "/tasks" },
     { id: "calories", label: "Wellness", icon: Activity, path: "/calories" },
     { id: "documents", label: "AI Documents", icon: FileText, path: "/documents" },
+    { id: "youtube", label: "Video Search", icon: Youtube, path: "/youtube" },
   ];
 
   return (
