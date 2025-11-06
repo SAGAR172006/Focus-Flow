@@ -107,18 +107,8 @@ const Layout = ({
       {/* Top Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
         <div className="flex items-center justify-between px-6 py-3">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Waves className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold">Focus Flow</h1>
-            </div>
-          </div>
-
           {/* Navigation with scroll */}
-          <div className="flex-1 max-w-3xl mx-8 relative flex items-center gap-2">
+          <div className="flex-1 max-w-4xl mx-auto relative flex items-center gap-2">
             {canScrollLeft && (
               <Button
                 variant="ghost"
@@ -132,7 +122,7 @@ const Layout = ({
             
             <div 
               ref={scrollContainerRef}
-              className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth"
+              className="flex gap-[18px] overflow-x-auto scrollbar-hide scroll-smooth"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {navItems.map(item => (
