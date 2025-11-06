@@ -1,10 +1,9 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "next-themes";
-import { LayoutDashboard, Timer, CheckSquare, Activity, FileText, Youtube, LogOut, Waves, Moon, Sun } from "lucide-react";
+import { LayoutDashboard, Timer, CheckSquare, Activity, FileText, Youtube, LogOut, Waves, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 interface LayoutProps {
   children: ReactNode;
@@ -13,10 +12,6 @@ const Layout = ({
   children
 }: LayoutProps) => {
   const navigate = useNavigate();
-  const {
-    theme,
-    setTheme
-  } = useTheme();
   const [user, setUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState("dashboard");
   useEffect(() => {
@@ -46,11 +41,15 @@ const Layout = ({
     await supabase.auth.signOut();
     navigate("/auth");
   };
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
   const navItems = [{
     id: "dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
-    path: "/"
+    path: "/dashboard"
   }, {
     id: "timers",
     label: "Focus Tools",
@@ -77,60 +76,112 @@ const Layout = ({
     icon: Youtube,
     path: "/youtube"
   }];
+
+  const checkScroll = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      setCanScrollLeft(container.scrollLeft > 0);
+      setCanScrollRight(
+        container.scrollLeft < container.scrollWidth - container.clientWidth - 1
+      );
+    }
+  };
+
+  const scroll = (direction: 'left' | 'right') => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      const scrollAmount = direction === 'left' ? -200 : 200;
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      checkScroll();
+      container.addEventListener('scroll', checkScroll);
+      return () => container.removeEventListener('scroll', checkScroll);
+    }
+  }, []);
   return <div className="min-h-screen bg-background">
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 border-r border-border bg-card/50 backdrop-blur-sm">
-        <div className="flex flex-col h-full">
+      {/* Top Navigation Bar */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
+        <div className="flex items-center justify-between px-6 py-3">
           {/* Logo */}
-          <div className="p-6 border-b border-border">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Waves className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold">ProductivityFlow</h1>
-                  <p className="text-xs text-muted-foreground">Stay focused</p>
-                </div>
-              </div>
-              
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Waves className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold">Focus Flow</h1>
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
-            {navItems.map(item => <Button key={item.id} variant={currentPage === item.id ? "secondary" : "ghost"} className={cn("w-full justify-start gap-3", currentPage === item.id && "bg-secondary/50")} onClick={() => {
-            setCurrentPage(item.id);
-            navigate(item.path);
-          }}>
-                <item.icon className="h-5 w-5" />
-                {item.label}
-              </Button>)}
-          </nav>
+          {/* Navigation with scroll */}
+          <div className="flex-1 max-w-3xl mx-8 relative flex items-center gap-2">
+            {canScrollLeft && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => scroll('left')}
+                className="shrink-0"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            )}
+            
+            <div 
+              ref={scrollContainerRef}
+              className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {navItems.map(item => (
+                <Button
+                  key={item.id}
+                  variant={currentPage === item.id ? "secondary" : "ghost"}
+                  className={cn(
+                    "shrink-0 gap-2",
+                    currentPage === item.id && "bg-secondary/50"
+                  )}
+                  onClick={() => {
+                    setCurrentPage(item.id);
+                    navigate(item.path);
+                  }}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </Button>
+              ))}
+            </div>
+
+            {canScrollRight && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => scroll('right')}
+                className="shrink-0"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
 
           {/* User section */}
-          <div className="p-4 border-t border-border px-[18px]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-sm font-medium text-primary">
-                    {user?.email?.[0].toUpperCase()}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{user?.email}</p>
-                </div>
-              </div>
-              <Button variant="ghost" size="icon" onClick={handleLogout} className="shrink-0">
-                <LogOut className="h-4 w-4" />
-              </Button>
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center">
+              <span className="text-sm font-medium text-primary">
+                {user?.email?.[0].toUpperCase()}
+              </span>
             </div>
+            <Button variant="ghost" size="icon" onClick={handleLogout}>
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-      </aside>
+      </header>
 
       {/* Main content */}
-      <main className="ml-64 p-8">{children}</main>
+      <main className="pt-20 p-8">{children}</main>
     </div>;
 };
 export default Layout;

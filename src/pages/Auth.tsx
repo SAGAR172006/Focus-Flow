@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Waves } from "lucide-react";
 import underwaterBg from "@/assets/underwater-bg.jpg";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ const Auth = () => {
       email: signUpData.email,
       password: signUpData.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.origin}/dashboard`,
         data: {
           username: signUpData.username,
           full_name: signUpData.fullName,
@@ -77,7 +78,7 @@ const Auth = () => {
         description: error.message,
       });
     } else {
-      navigate("/");
+      navigate("/dashboard");
     }
   };
 
@@ -85,7 +86,7 @@ const Auth = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: `${window.location.origin}/dashboard`,
       },
     });
 
@@ -95,6 +96,26 @@ const Auth = () => {
         title: "Google sign in failed",
         description: error.message,
       });
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    setIsLoading(true);
+    const { error } = await supabase.auth.signInAnonymously();
+    setIsLoading(false);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Guest login failed",
+        description: error.message,
+      });
+    } else {
+      toast({
+        title: "Logged in as guest",
+        description: "Your data will not be saved permanently.",
+      });
+      navigate("/dashboard");
     }
   };
 
@@ -114,7 +135,7 @@ const Auth = () => {
               <Waves className="h-8 w-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold">ProductivityFlow</CardTitle>
+          <CardTitle className="text-3xl font-bold">Focus Flow</CardTitle>
           <CardDescription>Your personal productivity companion</CardDescription>
         </CardHeader>
         <CardContent>
@@ -187,6 +208,29 @@ const Auth = () => {
                   </svg>
                   Sign in with Google
                 </Button>
+
+                <TooltipProvider>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="w-full mt-2 text-muted-foreground hover:text-foreground"
+                        onClick={handleGuestLogin}
+                        disabled={isLoading}
+                      >
+                        Continue as Guest
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      <p className="text-sm">
+                        Guest mode allows you to use the app without creating an account. 
+                        However, your data will not be stored permanently. We recommend 
+                        signing up to save your progress.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </TabsContent>
 
