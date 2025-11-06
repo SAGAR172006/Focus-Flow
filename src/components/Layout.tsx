@@ -122,7 +122,7 @@ const Layout = ({
             
             <div 
               ref={scrollContainerRef}
-              className="flex gap-[18px] overflow-x-auto scrollbar-hide scroll-smooth"
+              className="flex gap-8 overflow-x-auto scrollbar-hide scroll-smooth"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {navItems.map(item => (
