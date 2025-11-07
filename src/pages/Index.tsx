@@ -133,9 +133,9 @@ const Index = () => {
           }}
         >
           <div className="relative inline-block">
-            <Sparkles className="absolute -top-8 -left-8 h-8 w-8 text-primary animate-pulse" />
-            <Sparkles className="absolute -bottom-8 -right-8 h-8 w-8 text-secondary animate-pulse" style={{ animationDelay: '1s' }} />
-            <h1 className="text-7xl md:text-9xl font-bold tracking-tight bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent relative shine-text">
+            <Sparkles className="absolute -top-6 -left-6 md:-top-8 md:-left-8 h-6 w-6 md:h-8 md:w-8 text-primary animate-pulse" />
+            <Sparkles className="absolute -bottom-6 -right-6 md:-bottom-8 md:-right-8 h-6 w-6 md:h-8 md:w-8 text-secondary animate-pulse" style={{ animationDelay: '1s' }} />
+            <h1 className="text-7xl md:text-9xl font-bold tracking-tight shine-text">
               Focus Flow
             </h1>
           </div>
