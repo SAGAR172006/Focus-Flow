@@ -162,15 +162,18 @@ const YouTube = () => {
                   </div>
 
                   {/* Watch Button */}
-                  <Button
+                  <a
+                    href={`https://www.youtube.com/watch?v=${video.videoId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="w-full"
-                    variant="default"
-                    onClick={() => window.open(`https://www.youtube.com/watch?v=${video.videoId}`, '_blank')}
                   >
-                    <PlayCircle className="mr-2 h-4 w-4" />
-                    Watch on YouTube
-                    <ExternalLink className="ml-2 h-3 w-3" />
-                  </Button>
+                    <Button className="w-full" variant="default">
+                      <PlayCircle className="mr-2 h-4 w-4" />
+                      Watch on YouTube
+                      <ExternalLink className="ml-2 h-3 w-3" />
+                    </Button>
+                  </a>
                 </CardContent>
               </Card>
             ))}
