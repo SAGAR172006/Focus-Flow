@@ -1,9 +1,9 @@
-import { ReactNode, useEffect, useState, useRef } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Timer, CheckSquare, Activity, FileText, Youtube, LogOut, Waves, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Timer, CheckSquare, Activity, FileText, Youtube, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 interface LayoutProps {
   children: ReactNode;
@@ -41,9 +41,6 @@ const Layout = ({
     await supabase.auth.signOut();
     navigate("/auth");
   };
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
 
   const navItems = [{
     id: "dashboard",
@@ -77,52 +74,14 @@ const Layout = ({
     path: "/youtube"
   }];
 
-  const checkScroll = () => {
-    const container = scrollContainerRef.current;
-    if (container) {
-      setCanScrollLeft(container.scrollLeft > 0);
-      setCanScrollRight(
-        container.scrollLeft < container.scrollWidth - container.clientWidth - 1
-      );
-    }
-  };
-
-  const scroll = (direction: 'left' | 'right') => {
-    const container = scrollContainerRef.current;
-    if (container) {
-      const scrollAmount = direction === 'left' ? -200 : 200;
-      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
-  };
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (container) {
-      checkScroll();
-      container.addEventListener('scroll', checkScroll);
-      return () => container.removeEventListener('scroll', checkScroll);
-    }
-  }, []);
   return <div className="min-h-screen bg-background">
       {/* Top Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
         <div className="flex items-center justify-between px-6 py-3">
           {/* Navigation with scroll */}
-          <div className="flex-1 max-w-4xl mx-auto relative flex items-center gap-2">
-            {canScrollLeft && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => scroll('left')}
-                className="shrink-0"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            )}
-            
+          <div className="flex-1 max-w-4xl mx-auto">
             <div 
-              ref={scrollContainerRef}
-              className="flex gap-8 overflow-x-auto scrollbar-hide scroll-smooth"
+              className="flex gap-8 overflow-x-auto scrollbar-hide scroll-smooth justify-center"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {navItems.map(item => (
@@ -143,17 +102,6 @@ const Layout = ({
                 </Button>
               ))}
             </div>
-
-            {canScrollRight && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => scroll('right')}
-                className="shrink-0"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            )}
           </div>
 
           {/* User section */}

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Waves } from "lucide-react";
+import { Waves, ArrowLeft } from "lucide-react";
 import underwaterBg from "@/assets/underwater-bg.jpg";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -127,6 +127,16 @@ const Auth = () => {
         style={{ backgroundImage: `url(${underwaterBg})` }}
       />
       <div className="absolute inset-0 bg-background/70 backdrop-blur-sm" />
+      
+      {/* Back to Home Button */}
+      <Button
+        onClick={() => navigate("/")}
+        variant="ghost"
+        className="absolute top-8 left-8 gap-2 z-20"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Home
+      </Button>
       
       <Card className="w-full max-w-md border-border/50 shadow-2xl relative z-10 bg-card/80 backdrop-blur-md">
         <CardHeader className="space-y-1 text-center">
