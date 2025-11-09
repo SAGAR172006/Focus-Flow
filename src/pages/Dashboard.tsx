@@ -314,7 +314,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={calorieData}>
+              <LineChart data={calorieData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis
                   dataKey="date"
@@ -330,9 +330,23 @@ const Dashboard = () => {
                   }}
                 />
                 <Legend />
-                <Bar dataKey="gained" name="Gained" fill="hsl(var(--accent))" />
-                <Bar dataKey="spent" name="Spent" fill="hsl(var(--primary))" />
-              </BarChart>
+                <Line
+                  type="monotone"
+                  dataKey="gained"
+                  name="Gained"
+                  stroke="hsl(var(--accent))"
+                  strokeWidth={2}
+                  dot={{ fill: "hsl(var(--accent))" }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="spent"
+                  name="Spent"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={{ fill: "hsl(var(--primary))" }}
+                />
+              </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
