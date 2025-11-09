@@ -42,39 +42,48 @@ const Dashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [calorieRecords, setCalorieRecords] = useState<CalorieRecord[]>([]);
   const [viewMode, setViewMode] = useState<"daily" | "weekly">("weekly");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchAnalytics();
   }, []);
 
   const fetchAnalytics = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    try {
+      setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    // Fetch time logs
-    const { data: logs } = await supabase
-      .from("time_logs")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+      // Optimize: Fetch all data in parallel
+      const [logsResult, tasksResult, caloriesResult] = await Promise.all([
+        supabase
+          .from("time_logs")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(100),
+        supabase
+          .from("tasks")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(100),
+        supabase
+          .from("calorie_records")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("recorded_at", { ascending: false })
+          .limit(100),
+      ]);
 
-    // Fetch tasks
-    const { data: taskData } = await supabase
-      .from("tasks")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-
-    // Fetch calorie records
-    const { data: calories } = await supabase
-      .from("calorie_records")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("recorded_at", { ascending: false });
-
-    setTimeLogs(logs || []);
-    setTasks(taskData || []);
-    setCalorieRecords(calories || []);
+      setTimeLogs(logsResult.data || []);
+      setTasks(tasksResult.data || []);
+      setCalorieRecords(caloriesResult.data || []);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Calculate stats
@@ -173,6 +182,17 @@ const Dashboard = () => {
       net: gained - spent,
     };
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

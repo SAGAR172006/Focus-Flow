@@ -1,45 +1,51 @@
 import { ReactNode, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, Timer, CheckSquare, Activity, FileText, Youtube, LogOut, FileEdit } from "lucide-react";
 import { cn } from "@/lib/utils";
+
 interface LayoutProps {
   children: ReactNode;
 }
-const Layout = ({
-  children
-}: LayoutProps) => {
+
+const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [currentPage, setCurrentPage] = useState("dashboard");
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    supabase.auth.getSession().then(({
-      data: {
-        session
-      }
-    }) => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
       setUser(session?.user ?? null);
       if (!session) {
         navigate("/auth");
       }
     });
-    const {
-      data: {
-        subscription
-      }
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
       setUser(session?.user ?? null);
       if (!session) {
         navigate("/auth");
       }
+      setIsLoading(false);
     });
+
     return () => subscription.unsubscribe();
   }, [navigate]);
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
+    try {
+      await supabase.auth.signOut();
+      navigate("/auth");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const navItems = [{
@@ -78,6 +84,17 @@ const Layout = ({
     icon: FileEdit,
     path: "/pdf-editor"
   }];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return <div className="min-h-screen bg-background">
       {/* Top Navigation Bar */}
