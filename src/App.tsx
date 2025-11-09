@@ -12,6 +12,7 @@ import Tasks from "./pages/Tasks";
 import Calories from "./pages/Calories";
 import Documents from "./pages/Documents";
 import YouTube from "./pages/YouTube";
+import PdfEditor from "./pages/PdfEditor";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/calories" element={<Layout><Calories /></Layout>} />
           <Route path="/documents" element={<Layout><Documents /></Layout>} />
           <Route path="/youtube" element={<Layout><YouTube /></Layout>} />
+          <Route path="/pdf-editor" element={<Layout><PdfEditor /></Layout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

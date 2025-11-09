@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Timer, CheckSquare, Activity, FileText, Youtube, LogOut } from "lucide-react";
+import { LayoutDashboard, Timer, CheckSquare, Activity, FileText, Youtube, LogOut, FileEdit } from "lucide-react";
 import { cn } from "@/lib/utils";
 interface LayoutProps {
   children: ReactNode;
@@ -72,6 +72,11 @@ const Layout = ({
     label: "Video Search",
     icon: Youtube,
     path: "/youtube"
+  }, {
+    id: "pdf-editor",
+    label: "PDF Editor",
+    icon: FileEdit,
+    path: "/pdf-editor"
   }];
 
   return <div className="min-h-screen bg-background">

@@ -170,7 +170,7 @@ All colors MUST be HSL.
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: shine-wave 3s linear infinite;
+    animation: shine-wave 4.2s linear infinite;
   }
 
   @keyframes shine-wave {
