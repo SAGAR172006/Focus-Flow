@@ -1,0 +1,1 @@
+{\n  "name": "focus-flow",\n  "version": "1.0.0",\n  "description": "A minimal backend for Focus Flow application",\n  "main": "index.js",\n  "scripts": {\n    "test": "echo 'Error: no test specified' && exit 1"\n  },\n  "author": "SAGAR172006",\n  "license": "ISC"\n}
